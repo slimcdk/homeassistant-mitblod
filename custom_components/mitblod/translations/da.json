@@ -3,11 +3,11 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "Username",
-                    "password": "Password",
+                    "username": "Brugernavn",
+                    "password": "Kodeord",
                     "institution": "Institution"
                 },
-                "title": "Enter data"
+                "title": "Indtast data"
             }
         },
         "title": "MitBlod"
