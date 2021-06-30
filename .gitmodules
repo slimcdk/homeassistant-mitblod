@@ -1,0 +1,3 @@
+[submodule ".config/integration"]
+	path = .config/hacs-integration
+	url = https://github.com/hacs/integration.git

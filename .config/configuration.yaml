@@ -1,0 +1,5 @@
+homeassistant:
+    name: MitBlod Integration development
+    unit_system: metric
+
+defualt_config:
