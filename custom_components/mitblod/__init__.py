@@ -10,7 +10,7 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-#from pymitblod.mitblod import MitBlod
+from pymitblod import MitBlod, Institutions
 
 from .const import DOMAIN
 
@@ -23,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -34,11 +34,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MitBlod from a config entry."""
-    username = entry.data['username']
+    identification = entry.data['identification']
     password = entry.data['password']
     institution = entry.data['institution']
+
     
-    hass.data[DOMAIN][entry.entry_id] = HassMitBlod(username, password, institution)
+    hass.data[DOMAIN][entry.entry_id] = HassMitBlod(identification, password, institution)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -64,7 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 class HassMitBlod:
-    def __init__(self, username, password, institution):
-        #self._client = MitBlod(username, password, institution)
+    def __init__(self, identification, password, institution):
+        #self._client = MitBlod(identification, password, institution)
         self.institution = institution
         self._data = None

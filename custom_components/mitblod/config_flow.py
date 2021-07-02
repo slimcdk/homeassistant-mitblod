@@ -1,4 +1,5 @@
 """Config flow for MitBlod integration."""
+import copy
 import logging
 
 import voluptuous as vol
@@ -7,10 +8,22 @@ from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
+import pymitblod
+
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"username": str, "password": str, "institution": str})
+DATA_SCHEMA = vol.Schema({
+    vol.Required("identification"): str,
+    vol.Required("password"): str, 
+    vol.Required("institution", default=pymitblod.Institutions.list()[0].name()): vol.In( 
+        [pymitblod.Institutions.list()[0].name(), pymitblod.Institutions.list()[1].name()]
+    )
+})
 
+
+
+async def your_validate_func():
+    pass
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -21,16 +34,16 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # If your PyPI package is not built with async, pass your methods
     # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
+    await hass.async_add_executor_job(
+        your_validate_func, data["identification"], data["password"], data["institution"]
+    )
 
-    username = data["username"]
+    identification = data["identification"]
     password = data["password"]
     institution = data["institution"]
     
     # hub = PlaceholderHub(data["host"])
-    # if not await hub.authenticate(username, password):
+    # if not await hub.authenticate(identification, password):
     #     raise InvalidAuth
 
     # If you cannot connect:
@@ -55,10 +68,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 #info = await validate_input(self.hass, user_input)
-                username = user_input["username"]
+                identification = user_input["identification"]
                 password = user_input["password"]
                 institution = user_input["institution"]
-                info = f"MitBlod {username}:{password} at {institution}"
+                info = f"MitBlod at {institution}"
                 return self.async_create_entry(title=info, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"

@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "Brugernavn",
+                    "identification": "CPR. nr",
                     "password": "Kodeord",
                     "institution": "Institution"
                 },

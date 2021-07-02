@@ -1,12 +1,18 @@
 {
   "image": "thomasloven/hass-custom-devcontainer",
-  "postCreateCommand": "sudo chown -R vscode /config && container setup",
-  "forwardPorts": [8123, 5002],
+  "postCreateCommand": "sudo chown -R vscode /config && pip install -e ../pymitblod/ && container setup",
+  "forwardPorts": [8123],
   "mounts": [
     "source=${localWorkspaceFolder},target=/config/www/workspace,type=bind",
     "source=${localWorkspaceFolder}/.config,target=/config,type=bind",
     // "source=${localWorkspaceFolder}/.config/configuration.yaml,target=/config/configuration.yaml,type=bind",
     "source=${localWorkspaceFolder}/custom_components/mitblod,target=/config/custom_components/mitblod,type=bind",
+    "source=${localWorkspaceFolder}/../pymitblod,target=/workspaces/pymitblod,type=bind"
   ],
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-toolsai.jupyter"
+  ]
   // "runArgs": ["--env-file", "${localWorkspaceFolder}/.config/.env"]
 }
