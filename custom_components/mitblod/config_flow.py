@@ -1,94 +1,82 @@
 """Config flow for MitBlod integration."""
-import copy
-import logging
-
-import voluptuous as vol
-
-from homeassistant import config_entries, core, exceptions
-
-from .const import DOMAIN  # pylint:disable=unused-import
-
 import pymitblod
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigFlow, CONN_CLASS_CLOUD_POLL
+from homeassistant.const import (
+    CONF_NAME, 
+    CONF_PASSWORD
+)
 
-DATA_SCHEMA = vol.Schema({
-    vol.Required("identification"): str,
-    vol.Required("password"): str, 
-    vol.Required("institution", default=pymitblod.Institutions.list()[0].name()): vol.In( 
-        [pymitblod.Institutions.list()[0].name(), pymitblod.Institutions.list()[1].name()]
+from .const import (
+    CONF_IDENTIFICATION,
+    CONF_INSTITUTION,
+    DOMAIN,
+    CONF_ADDITIONAL_DATA,
+
+    MITBLOD_SCHEMA,
+    USERDATA_SCHEMA,
+
+    _LOGGER
+)
+
+
+async def validate_login(hass:HomeAssistant, user_input:dict):
+    institution_enum = pymitblod.Institutions.get_enum_with(value=user_input[CONF_INSTITUTION])
+    patient = pymitblod.MitBlod(
+        identification=user_input[CONF_IDENTIFICATION],
+        password=user_input[CONF_PASSWORD],
+        institution=institution_enum
     )
-})
+    return hass.async_add_executor_job(patient.can_login)
 
 
-
-async def your_validate_func():
-    pass
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    await hass.async_add_executor_job(
-        your_validate_func, data["identification"], data["password"], data["institution"]
+async def get_mitblod_name(hass:HomeAssistant, user_input:dict):
+    institution_enum = pymitblod.Institutions.get_enum_with(value=user_input[CONF_INSTITUTION])
+    patient = pymitblod.MitBlod(
+        identification=user_input[CONF_IDENTIFICATION],
+        password=user_input[CONF_PASSWORD],
+        institution=institution_enum
     )
-
-    identification = data["identification"]
-    password = data["password"]
-    institution = data["institution"]
-    
-    # hub = PlaceholderHub(data["host"])
-    # if not await hub.authenticate(identification, password):
-    #     raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": f"MitBlod at {institution}"}
+    return hass.async_add_executor_job(patient.mitblod_name)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+
+class MitBlodFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MitBlod."""
 
     VERSION = 1
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
     
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    def __init__(self) -> None:
+        super().__init__()
+        self._init_data = {}
+        self._additional_data = {}
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+    
+    async def async_step_user(self, user_input:dict=None) -> FlowResult:
+        """Handle a flow initiated by the user."""
+        
+        errors={}
+        if user_input is not None:
+            if await validate_login(hass=self.hass, user_input=user_input):
+                self._init_data = user_input
+                return await self.async_step_additional()
+        return self.async_show_form(step_id="user", data_schema=MITBLOD_SCHEMA, errors=errors)
+    
+
+    async def async_step_additional(self, user_input:dict=None) -> FlowResult:
         errors = {}
         if user_input is not None:
-            try:
-                #info = await validate_input(self.hass, user_input)
-                identification = user_input["identification"]
-                password = user_input["password"]
-                institution = user_input["institution"]
-                info = f"MitBlod at {institution}"
-                return self.async_create_entry(title=info, data=user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+            self._additional_data = user_input
+            return await self.async_step_finish()
+        return self.async_show_form(step_id="additional", data_schema=USERDATA_SCHEMA, errors=errors)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+    async def async_step_finish(self) -> FlowResult:
+        data = {**self._init_data, **self._additional_data}
+        name = data[CONF_NAME] if CONF_NAME in self._additional_data else get_mitblod_name(self.hass, self._init_data)
+        return self.async_create_entry(title=f"{name} at {data[CONF_INSTITUTION]}", data=data)

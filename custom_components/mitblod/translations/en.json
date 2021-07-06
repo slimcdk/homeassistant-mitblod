@@ -1,15 +1,25 @@
 {
     "config": {
+        "title": "MitBlod",
         "step": {
             "user": {
+                "title": "Enter MitBlod data",
                 "data": {
                     "identification": "Social Security Number",
                     "password": "Password",
                     "institution": "Institution"
-                },
-                "title": "Enter data"
+                }
+            },
+            "additional": {
+                "title": "Enter health data",
+                "data": {
+                    "name": "Name",
+                    "height": "Height (cm)",
+                    "weight": "Weight (kg)",
+                    "age": "Age",
+                    "sex": "Sex"
+                }
             }
-        },
-        "title": "MitBlod"
+        }
     }
 }

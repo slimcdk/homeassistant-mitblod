@@ -1,15 +1,25 @@
 {
     "config": {
+        "title": "MitBlod",
         "step": {
             "user": {
+                "title": "Indtast MitBlod data",
                 "data": {
                     "identification": "CPR. nr",
                     "password": "Kodeord",
                     "institution": "Institution"
-                },
-                "title": "Indtast data"
+                }
+            },
+            "additional": {
+                "title": "Indtast sundhedsdata",
+                "data": {
+                    "name": "Navn",
+                    "height": "Højde (cm)",
+                    "weight": "Vægt (kg)",
+                    "age": "Alder",
+                    "sex": "Køn"
+                }
             }
-        },
-        "title": "MitBlod"
+        }
     }
 }

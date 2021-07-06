@@ -1,29 +1,40 @@
 """The MitBlod integration."""
 import asyncio
-import logging
-import sys
-
-import voluptuous as vol
-from homeassistant.util import Throttle
 from datetime import timedelta
 
+import pymitblod
+
+import voluptuous as vol
+
+from homeassistant.util import Throttle
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_NAME, 
+    CONF_PASSWORD
+)
 
-from pymitblod import MitBlod, Institutions
+from .const import (
+    CONF_AGE,
+    CONF_HEIGHT,
+    CONF_IDENTIFICATION,
+    CONF_INSTITUTION,
+    CONF_SEX,
+    CONF_WEIGHT,
+    DOMAIN,
 
-from .const import DOMAIN
+    CONFIG_SCHEMA as _CONFIG_SCHEMA,
 
-import requests
+    _LOGGER
+)
 
-_LOGGER = logging.getLogger(__name__)
 
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = _CONFIG_SCHEMA
 
 PLATFORMS = ["sensor"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=12)
+
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -34,18 +45,25 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MitBlod from a config entry."""
-    identification = entry.data['identification']
-    password = entry.data['password']
-    institution = entry.data['institution']
 
-    
-    hass.data[DOMAIN][entry.entry_id] = HassMitBlod(identification, password, institution)
+    institution_enum = pymitblod.Institutions.get_enum_with(value=entry.data[CONF_INSTITUTION])
+    gender_enum = pymitblod.Genders.get_enum_with(value=entry.data[CONF_SEX])
+
+    hass.data[DOMAIN][entry.entry_id] = pymitblod.MitBlod(
+        identification=entry.data[CONF_IDENTIFICATION],
+        password=entry.data[CONF_PASSWORD],
+        institution=institution_enum,
+        name=entry.data[CONF_NAME],
+        age=entry.data[CONF_AGE],
+        weight=entry.data[CONF_WEIGHT],
+        height=entry.data[CONF_HEIGHT],
+        gender=gender_enum
+    )
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
     return True
 
 
@@ -61,11 +79,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
-
-class HassMitBlod:
-    def __init__(self, identification, password, institution):
-        #self._client = MitBlod(identification, password, institution)
-        self.institution = institution
-        self._data = None
