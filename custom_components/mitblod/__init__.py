@@ -1,12 +1,11 @@
 """The MitBlod integration."""
 import asyncio
-from datetime import timedelta
 
 import pymitblod
+from datetime import datetime
 
 import voluptuous as vol
 
-from homeassistant.util import Throttle
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
@@ -15,11 +14,11 @@ from homeassistant.const import (
 )
 
 from .const import (
-    CONF_AGE,
+    CONF_BIRTHDAY,
     CONF_HEIGHT,
     CONF_IDENTIFICATION,
     CONF_INSTITUTION,
-    CONF_SEX,
+    CONF_GENDER,
     CONF_WEIGHT,
     DOMAIN,
 
@@ -33,9 +32,6 @@ CONFIG_SCHEMA = _CONFIG_SCHEMA
 
 PLATFORMS = ["sensor"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=12)
-
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the MitBlod component."""
@@ -46,20 +42,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MitBlod from a config entry."""
 
-    institution_enum = pymitblod.Institutions.get_enum_with(value=entry.data[CONF_INSTITUTION])
-    gender_enum = pymitblod.Genders.get_enum_with(value=entry.data[CONF_SEX])
-
-    hass.data[DOMAIN][entry.entry_id] = pymitblod.MitBlod(
+    patient = pymitblod.MitBlod(
         identification=entry.data[CONF_IDENTIFICATION],
         password=entry.data[CONF_PASSWORD],
-        institution=institution_enum,
+        institution=pymitblod.Institutions.get_enum_for(value=entry.data[CONF_INSTITUTION]),
         name=entry.data[CONF_NAME],
-        age=entry.data[CONF_AGE],
+        birthday=datetime.strptime(str(entry.data[CONF_BIRTHDAY]), "%d-%m-%Y %H:%M"),
         weight=entry.data[CONF_WEIGHT],
         height=entry.data[CONF_HEIGHT],
-        gender=gender_enum
+        gender=pymitblod.Genders.get_enum_for(value=entry.data[CONF_GENDER])
     )
-
+    hass.data[DOMAIN][entry.entry_id] = patient
+    
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)

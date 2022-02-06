@@ -5,18 +5,13 @@
             "user": {
                 "title": "Enter MitBlod data",
                 "data": {
-                    "identification": "Social Security Number",
+                    "identification": "Social Security Number (CPR)",
                     "password": "Password",
-                    "institution": "Institution"
-                }
-            },
-            "additional": {
-                "title": "Enter health data",
-                "data": {
+                    "institution": "Institution",
                     "name": "Name",
                     "height": "Height (cm)",
                     "weight": "Weight (kg)",
-                    "age": "Age",
+                    "birthday": "Birthday (%d-%m-%Y %H:%M)",
                     "sex": "Sex"
                 }
             }

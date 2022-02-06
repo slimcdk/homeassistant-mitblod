@@ -7,16 +7,11 @@
                 "data": {
                     "identification": "CPR. nr",
                     "password": "Kodeord",
-                    "institution": "Institution"
-                }
-            },
-            "additional": {
-                "title": "Indtast sundhedsdata",
-                "data": {
+                    "institution": "Institution",
                     "name": "Navn",
                     "height": "Højde (cm)",
                     "weight": "Vægt (kg)",
-                    "age": "Alder",
+                    "birthday": "Fødselsdag (%d-%m-%Y %H:%M)",
                     "sex": "Køn"
                 }
             }

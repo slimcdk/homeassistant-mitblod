@@ -1,7 +1,11 @@
 """Constants for the MitBlod integration."""
+from __future__ import annotations
+
+from typing import Final
 
 import logging
 import pymitblod
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -10,34 +14,30 @@ from homeassistant.const import (
     CONF_PASSWORD
 )
 
-DOMAIN = "mitblod"
+DOMAIN: Final = "mitblod"
 
-CONF_IDENTIFICATION = "identification"
-CONF_INSTITUTION = "institution"
-CONF_AGE = "age"
-CONF_WEIGHT = "weight"
-CONF_HEIGHT = "height"
-CONF_SEX = "sex"
-CONF_GENDER = "gender"
-CONF_ADDITIONAL_DATA = "additional_data"
+CONF_IDENTIFICATION: Final = "identification"
+CONF_INSTITUTION: Final = "institution"
+CONF_BIRTHDAY: Final = "birthday"
+CONF_WEIGHT: Final = "weight"
+CONF_HEIGHT: Final = "height"
+CONF_GENDER: Final = "gender"
 
+
+def validate_datetime(val):
+    print(val)
+    return val
 
 MITBLOD_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): str,
         vol.Required(CONF_IDENTIFICATION): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_INSTITUTION, default=pymitblod.Institutions.list()[0]): vol.In(pymitblod.Institutions.list()),
-        # vol.Required(CONF_ADDITIONAL_DATA, default=True): bool,
-    }
-)
-
-USERDATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
+        vol.Required(CONF_INSTITUTION, default=str(pymitblod.Institutions.list()[0])): vol.In([str(i) for i in pymitblod.Institutions.list()]),
         vol.Required(CONF_HEIGHT): int,
         vol.Required(CONF_WEIGHT): int,
-        vol.Required(CONF_AGE): int,
-        vol.Required(CONF_SEX, default=pymitblod.Genders.list()[0]): vol.In(pymitblod.Genders.list())
+        vol.Required(CONF_BIRTHDAY): str, # vol.datetime,
+        vol.Required(CONF_GENDER, default=str(pymitblod.Genders.list()[0])): vol.In([str(g) for g in pymitblod.Genders.list()])
     }
 )
 
